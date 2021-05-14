@@ -77,7 +77,14 @@
               color="primary"
               @click="exportExcel"
               :disabled="!valid"
-          >search
+              :loading="loading"
+          >Download
+            <v-icon
+                right
+                dark
+            >
+              mdi-cloud-download
+            </v-icon>
           </v-btn>
         </v-form>
 
@@ -94,6 +101,7 @@ export default {
   name: 'Crawler',
 
   data: () => ({
+    loading: false,
     fileName: "",
     textError: "Connect error @@ .  ID is incorrect !!",
     timeout: 3500,
@@ -119,12 +127,18 @@ export default {
       this.$refs.form.validate();
     },
 
-    exportExcel() {
-      this.downloadExcel().then(data => {
-        const fileName = this.fileName;
-        const exportType = 'xls';
-        exportFromJSON({data, fileName, exportType});
-      }).catch(() => this.snackbar = true);
+    async exportExcel() {
+      this.loading = true;
+      await setTimeout(()=> {
+        this.downloadExcel().then(data => {
+          const fileName = this.fileName;
+          const exportType = 'xls';
+          exportFromJSON({data, fileName, exportType});
+          this.loading = false;
+        }).catch(() => {this.snackbar = true; this.loading = false;});
+      }, 1000);
+
+
     },
 
     async downloadExcel() {
