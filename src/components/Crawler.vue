@@ -54,7 +54,7 @@
               class="mt-5"
               label="Page"
               hide-details="auto"
-              v-model="page"
+              v-model="pages"
               :rules="rulesNumb"
           ></v-text-field>
           <v-text-field
@@ -75,7 +75,7 @@
               class="mt-6"
               depressed
               color="primary"
-              @click="downloadExcel"
+              @click="exportExcel"
               :disabled="!valid"
           >search
           </v-btn>
@@ -101,8 +101,8 @@ export default {
     disableDownload: true,
     valid: true,
     keyword: "",
-    pageSize: 10,
-    page: 1,
+    pageSize: 80,
+    pages: 1,
     tokenId: "",
     rulesNumb: [
       value => !!value || 'Required.',
@@ -119,30 +119,58 @@ export default {
       this.$refs.form.validate();
     },
 
+    exportExcel() {
+      this.downloadExcel().then(data => {
+        const fileName = this.fileName;
+        const exportType = 'xls';
+        exportFromJSON({data, fileName, exportType});
+      }).catch(() => this.snackbar = true);
+    },
+
     async downloadExcel() {
       if (this.valid) {
-        const client = createClient(this.tokenId);
-        const query = this.keyword;
-        const per_page = this.pageSize;
-        const page = this.page;
-        let res;
+
+        let imagesInfo
         try {
-          res = await client.photos.search({query, 'photoModalImageAlt': 1, per_page: per_page, page: page});
+          imagesInfo = await Promise.all(this.getDataByPages());
         } catch (e) {
           this.snackbar = true;
         }
-        const imagesInfo = res.photos;
 
-        const data = imagesInfo.map((img) => {
-          const title = this.extractTitleFromUrl(img);
-          const url = img.url;
-
-          return {Title: title, URL: url};
+        let data = [];
+        imagesInfo.forEach(promise => {
+          let subData = promise.photos.map((img) => {
+            const title = this.extractTitleFromUrl(img);
+            const url = img.url;
+            return {Title: title, URL: url};
+          });
+          Array.prototype.unshift.apply(data, subData);
         });
-        const fileName = this.fileName;
-        const exportType = 'xls'
-        exportFromJSON({data, fileName, exportType});
+
+        let uniqueValues = new Set();
+        let final = [];
+        data.forEach(function(el) {
+
+          if (!uniqueValues.has(el.URL)) {
+            uniqueValues.add(el.URL);
+            final.push(el);
+          }
+        });
+        return final;
       }
+    },
+
+    getDataByPages() {
+      const client = createClient(this.tokenId);
+      const query = this.keyword;
+      const per_page = this.pageSize;
+      const pages = this.pages;
+      let promises = [];
+      for (let i = 1; i <= pages; i++) {
+        let res = client.photos.search({query, per_page: per_page, page: i});
+        promises.push(res);
+      }
+      return promises;
     },
 
     extractTitleFromUrl(img) {

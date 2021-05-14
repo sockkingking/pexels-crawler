@@ -23,7 +23,7 @@
 import Crawler from './components/Crawler';
 
 export default {
-  name: 'Pexels Crawler',
+  name: 'PexelsCrawler',
 
   components: {
     Crawler,
