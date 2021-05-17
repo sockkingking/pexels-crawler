@@ -48,13 +48,21 @@
               hide-details="auto"
               v-model="pageSize"
               class="mt-5"
+              disabled
               :rules="rulesNumb"
           ></v-text-field>
           <v-text-field
               class="mt-5"
               label="Page"
               hide-details="auto"
-              v-model="pages"
+              v-model="pageStart"
+              :rules="rulesNumb"
+          ></v-text-field>
+          <v-text-field
+              class="mt-5"
+              label="Page"
+              hide-details="auto"
+              v-model="pageEnd"
               :rules="rulesNumb"
           ></v-text-field>
           <v-text-field
@@ -110,7 +118,8 @@ export default {
     valid: true,
     keyword: "",
     pageSize: 80,
-    pages: 1,
+    pageStart: 1,
+    pageEnd: 10,
     tokenId: "",
     rulesNumb: [
       value => !!value || 'Required.',
@@ -155,7 +164,7 @@ export default {
         imagesInfo.forEach(promise => {
           let subData = promise.photos.map((img) => {
             const title = this.extractTitleFromUrl(img);
-            const url = img.url;
+            const url = img.src.large;
             return {Title: title, URL: url};
           });
           Array.prototype.unshift.apply(data, subData);
@@ -178,9 +187,14 @@ export default {
       const client = createClient(this.tokenId);
       const query = this.keyword;
       const per_page = this.pageSize;
-      const pages = this.pages;
+      const pageStart = this.pageStart;
+      const pageEnd = this.pageEnd;
       let promises = [];
-      for (let i = 1; i <= pages; i++) {
+      if (pageEnd < pageStart) {
+        this.snackbar = true;
+        return null;
+      }
+      for (let i = pageStart; i <= pageEnd; i++) {
         let res = client.photos.search({query, per_page: per_page, page: i});
         promises.push(res);
       }
