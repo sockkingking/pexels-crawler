@@ -53,14 +53,14 @@
           ></v-text-field>
           <v-text-field
               class="mt-5"
-              label="Page"
+              label="Page Start"
               hide-details="auto"
               v-model="pageStart"
               :rules="rulesNumb"
           ></v-text-field>
           <v-text-field
               class="mt-5"
-              label="Page"
+              label="Page End"
               hide-details="auto"
               v-model="pageEnd"
               :rules="rulesNumb"
