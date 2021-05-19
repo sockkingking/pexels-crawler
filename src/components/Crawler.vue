@@ -164,7 +164,7 @@ export default {
         imagesInfo.forEach(promise => {
           let subData = promise.photos.map((img) => {
             const title = this.extractTitleFromUrl(img);
-            const url = img.src.original;
+            const url = img.src.portrait;
             return {Title: title, URL: url};
           });
           Array.prototype.unshift.apply(data, subData);
